@@ -52,6 +52,9 @@ export class FormWidget extends ReactWidget {
         compact={true}
         showModifiedFromDefault={this._props.showModified}
         translator={this._props.translator}
+        fields={this._props.fields}
+        templates={this._props.templates}
+        widgets={this._props.widgets}
       />
     );
   }

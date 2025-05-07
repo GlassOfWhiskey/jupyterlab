@@ -630,6 +630,7 @@ export function FormComponent(props: IFormComponentProps): JSX.Element {
     showModifiedFromDefault,
     translator,
     formContext,
+    templates,
     ...others
   } = props;
 
@@ -640,7 +641,7 @@ export function FormComponent(props: IFormComponentProps): JSX.Element {
   others.uiSchema = uiSchema;
 
   const { FieldTemplate, ArrayFieldTemplate, ObjectFieldTemplate } =
-    props.templates || JSONExt.emptyObject;
+    templates || JSONExt.emptyObject;
 
   const customization = {
     buttonStyle,
@@ -676,13 +677,16 @@ export function FormComponent(props: IFormComponentProps): JSX.Element {
     ]
   ) as React.FunctionComponent;
 
-  const templates: Record<string, React.FunctionComponent> = {
-    FieldTemplate: fieldTemplate,
-    ArrayFieldTemplate: arrayTemplate,
-    ObjectFieldTemplate: objectTemplate
-  };
-
   return (
-    <Form templates={templates} formContext={formContext as any} {...others} />
+    <Form
+      templates={{
+        ...templates,
+        FieldTemplate: fieldTemplate,
+        ArrayFieldTemplate: arrayTemplate,
+        ObjectFieldTemplate: objectTemplate
+      }}
+      formContext={formContext as any}
+      {...others}
+    />
   );
 }

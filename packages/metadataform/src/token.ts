@@ -14,6 +14,7 @@ import type {
 import type { ITranslator } from '@jupyterlab/translation';
 import type { PartialJSONObject, ReadonlyJSONObject } from '@lumino/coreutils';
 import { Token } from '@lumino/coreutils';
+import { Field, TemplatesType, Widget } from '@rjsf/utils';
 import type { MetadataFormWidget } from './metadataform';
 
 export namespace MetadataForm {
@@ -146,6 +147,23 @@ export namespace MetadataForm {
      * The plugin ID.
      */
     pluginId?: string;
+
+    /**
+     * The dictionary of registered fields in the form.
+     */
+    fields?: { [id: string]: Field };
+
+    /**
+     * The dictionary of registered templates in the form
+     */
+    templates?: Partial<Omit<TemplatesType, 'ButtonTemplates'>> & {
+      ButtonTemplates?: Partial<TemplatesType['ButtonTemplates']>;
+    };
+
+    /**
+     * The dictionary of registered widgets in the form.
+     */
+    widgets?: { [id: string]: Widget };
   }
 
   /**

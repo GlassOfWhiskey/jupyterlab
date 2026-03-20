@@ -436,7 +436,7 @@ interface IProps extends FieldProps {
 class SettingRenderer extends React.Component<IProps, IState> {
   constructor(props: IProps) {
     super(props);
-    this._setting = props.formContext.settings;
+    this._setting = props.registry.formContext.settings;
     this._trans = props.translator.load('jupyterlab');
 
     const schema = this._setting.schema['definitions'] as TDict;
@@ -445,7 +445,8 @@ class SettingRenderer extends React.Component<IProps, IState> {
     this._schema = schema['languageServer']['properties'];
     const title = props.schema.title;
     const desc = props.schema.description;
-    const settings: ISettingRegistry.ISettings = props.formContext.settings;
+    const settings: ISettingRegistry.ISettings =
+      props.registry.formContext.settings;
     const compositeData = settings.get(SETTING_NAME).composite as TDict;
 
     let items: TDict = {};

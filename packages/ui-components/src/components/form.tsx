@@ -13,6 +13,8 @@ import type { FormProps, IChangeEvent } from '@rjsf/core';
 import Form from '@rjsf/core';
 
 import type {
+  ArrayFieldItemButtonsTemplateProps,
+  ArrayFieldItemTemplateProps,
   ArrayFieldTemplateProps,
   FieldTemplateProps,
   ObjectFieldTemplateProps,
@@ -77,7 +79,7 @@ export namespace FormComponent {
     /**
      * Item index to move with this button.
      */
-    item: ArrayFieldTemplateProps['items'][number];
+    buttonsProps: ArrayFieldItemButtonsTemplateProps;
     /**
      * Direction in which to move the item.
      */
@@ -91,7 +93,7 @@ export namespace FormComponent {
     /**
      * Item index to drop with this button.
      */
-    item: ArrayFieldTemplateProps['items'][number];
+    buttonsProps: ArrayFieldItemButtonsTemplateProps;
   }
 
   /**
@@ -120,14 +122,11 @@ export const MoveButton = (
    */
   const disabled = () => {
     if (props.direction === 'up') {
-      return !props.item.hasMoveUp;
+      return !props.buttonsProps.hasMoveUp;
     } else {
-      return !props.item.hasMoveDown;
+      return !props.buttonsProps.hasMoveDown;
     }
   };
-
-  const moveTo =
-    props.direction === 'up' ? props.item.index - 1 : props.item.index + 1;
 
   if (props.buttonStyle === 'icons') {
     const iconProps: LabIcon.IReactProps = {
@@ -144,7 +143,11 @@ export const MoveButton = (
     return (
       <Button
         className="jp-ArrayOperationsButton"
-        onClick={props.item.onReorderClick(props.item.index, moveTo)}
+        onClick={
+          props.direction === 'up'
+            ? props.buttonsProps.onMoveUpItem
+            : props.buttonsProps.onMoveDownItem
+        }
         disabled={disabled()}
         appearance="stealth"
         title={trans.__('Move item %1', props.direction)}
@@ -156,7 +159,11 @@ export const MoveButton = (
     return (
       <button
         className="jp-mod-styled jp-mod-reject jp-ArrayOperationsButton"
-        onClick={props.item.onReorderClick(props.item.index, moveTo)}
+        onClick={
+          props.direction === 'up'
+            ? props.buttonsProps.onMoveUpItem
+            : props.buttonsProps.onMoveDownItem
+        }
         disabled={disabled()}
       >
         {props.direction === 'up' ? trans.__('Move up') : trans.__('Move down')}
@@ -181,7 +188,7 @@ export const DropButton = (
     return (
       <Button
         className="jp-mod-styled jp-mod-warn jp-ArrayOperationsButton"
-        onClick={props.item.onDropIndexClick(props.item.index)}
+        onClick={props.buttonsProps.onRemoveItem}
         appearance="stealth"
         title={trans.__('Remove item')}
       >
@@ -192,7 +199,7 @@ export const DropButton = (
     return (
       <button
         className="jp-mod-styled jp-mod-warn jp-ArrayOperationsButton"
-        onClick={props.item.onDropIndexClick(props.item.index)}
+        onClick={props.buttonsProps.onRemoveItem}
       >
         {trans.__('Remove')}
       </button>
@@ -290,6 +297,41 @@ function getTemplates(registry: Registry, uiSchema: UiSchema | undefined) {
  * Template to allow for custom buttons to re-order/remove entries in an array.
  * Necessary to create accessible buttons.
  */
+const CustomArrayItemTemplateFactory = (
+  options: FormComponent.ILabCustomizerProps
+) =>
+  customizeForLab<ArrayFieldItemTemplateProps>({
+    ...options,
+    name: 'JupyterLabArrayTemplate',
+    component: props => {
+      const { children, className, buttonsProps, itemKey } = props;
+      return (
+        <div key={itemKey} className={className}>
+          {children}
+          <div className="jp-ArrayOperations">
+            <MoveButton
+              buttonStyle={props.buttonStyle}
+              translator={props.translator}
+              buttonsProps={buttonsProps}
+              direction="up"
+            />
+            <MoveButton
+              buttonStyle={props.buttonStyle}
+              translator={props.translator}
+              buttonsProps={buttonsProps}
+              direction="down"
+            />
+            <DropButton
+              buttonStyle={props.buttonStyle}
+              translator={props.translator}
+              buttonsProps={buttonsProps}
+            />
+          </div>
+        </div>
+      );
+    }
+  });
+
 const CustomArrayTemplateFactory = (
   options: FormComponent.ILabCustomizerProps
 ) =>
@@ -307,13 +349,13 @@ const CustomArrayTemplateFactory = (
             <div className="jp-FormGroup-compactTitle">
               <div
                 className="jp-FormGroup-fieldLabel jp-FormGroup-contentItem"
-                id={`${props.idSchema.$id}__title`}
+                id={`${props.fieldPathId.$id}__title`}
               >
                 {props.title || ''}
               </div>
               <div
                 className="jp-FormGroup-description"
-                id={`${props.idSchema.$id}-description`}
+                id={`${props.fieldPathId.$id}-description`}
               >
                 {props.schema.description || ''}
               </div>
@@ -324,42 +366,17 @@ const CustomArrayTemplateFactory = (
                 <TitleField
                   {...commonProps}
                   title={props.title}
-                  id={`${props.idSchema.$id}-title`}
+                  id={`${props.fieldPathId.$id}-title`}
                 />
               )}
               <DescriptionField
                 {...commonProps}
-                id={`${props.idSchema.$id}-description`}
+                id={`${props.fieldPathId.$id}-description`}
                 description={props.schema.description ?? ''}
               />
             </>
           )}
-          {props.items.map(item => {
-            return (
-              <div key={item.key} className={item.className}>
-                {item.children}
-                <div className="jp-ArrayOperations">
-                  <MoveButton
-                    buttonStyle={props.buttonStyle}
-                    translator={props.translator}
-                    item={item}
-                    direction="up"
-                  />
-                  <MoveButton
-                    buttonStyle={props.buttonStyle}
-                    translator={props.translator}
-                    item={item}
-                    direction="down"
-                  />
-                  <DropButton
-                    buttonStyle={props.buttonStyle}
-                    translator={props.translator}
-                    item={item}
-                  />
-                </div>
-              </div>
-            );
-          })}
+          {props.items}
           {props.canAdd && (
             <AddButton
               onAddClick={props.onAddClick}
@@ -387,18 +404,18 @@ const CustomObjectTemplateFactory = (
       const { TitleField, DescriptionField } = getTemplates(registry, uiSchema);
 
       return (
-        <fieldset id={props.idSchema.$id}>
+        <fieldset id={props.fieldPathId.$id}>
           {props.compact ? (
             <div className="jp-FormGroup-compactTitle">
               <div
                 className="jp-FormGroup-fieldLabel jp-FormGroup-contentItem"
-                id={`${props.idSchema.$id}__title`}
+                id={`${props.fieldPathId.$id}__title`}
               >
                 {props.title || ''}
               </div>
               <div
                 className="jp-FormGroup-description"
-                id={`${props.idSchema.$id}__description`}
+                id={`${props.fieldPathId.$id}__description`}
               >
                 {props.schema.description || ''}
               </div>
@@ -409,7 +426,7 @@ const CustomObjectTemplateFactory = (
                 (props.uiSchema || JSONExt.emptyObject)['ui:title']) && (
                 <TitleField
                   {...commonProps}
-                  id={`${props.idSchema.$id}__title`}
+                  id={`${props.fieldPathId.$id}__title`}
                   title={
                     props.title ||
                     `${(props.uiSchema || JSONExt.emptyObject)['ui:title']}` ||
@@ -419,7 +436,7 @@ const CustomObjectTemplateFactory = (
               )}
               <DescriptionField
                 {...commonProps}
-                id={`${props.idSchema.$id}__description`}
+                id={`${props.fieldPathId.$id}__description`}
                 description={props.schema.description ?? ''}
               />
             </>
@@ -427,7 +444,7 @@ const CustomObjectTemplateFactory = (
           {props.properties.map(property => property.content)}
           {canExpand(props.schema, props.uiSchema, props.formData) && (
             <AddButton
-              onAddClick={props.onAddClick(props.schema)}
+              onAddClick={props.onAddProperty}
               buttonStyle={props.buttonStyle}
               translator={props.translator}
             />
@@ -454,15 +471,15 @@ const CustomTemplateFactory = (options: FormComponent.ILabCustomizerProps) =>
         label,
         displayLabel,
         id,
-        formContext,
         errors,
         rawErrors,
+        registry,
         children,
-        onKeyChange,
-        onDropPropertyClick
+        onKeyRenameBlur,
+        onRemoveProperty
       } = props;
 
-      const { defaultFormData } = formContext;
+      const { defaultFormData } = registry.formContext;
       const schemaIds = id.split('_');
       schemaIds.shift();
       const schemaId = schemaIds.join('.');
@@ -552,7 +569,7 @@ const CustomTemplateFactory = (options: FormComponent.ILabCustomizerProps) =>
               <input
                 className="jp-FormGroup-contentItem jp-mod-styled"
                 type="text"
-                onBlur={event => onKeyChange(event.target.value)}
+                onBlur={onKeyRenameBlur}
                 defaultValue={label}
               />
             )}
@@ -572,7 +589,7 @@ const CustomTemplateFactory = (options: FormComponent.ILabCustomizerProps) =>
             {isAdditional && (
               <button
                 className="jp-FormGroup-contentItem jp-mod-styled jp-mod-warn jp-FormGroup-removeButton"
-                onClick={onDropPropertyClick(label)}
+                onClick={onRemoveProperty}
               >
                 {trans.__('Remove')}
               </button>
@@ -639,8 +656,12 @@ export function FormComponent(props: IFormComponentProps): JSX.Element {
 
   others.uiSchema = uiSchema;
 
-  const { FieldTemplate, ArrayFieldTemplate, ObjectFieldTemplate } =
-    props.templates || JSONExt.emptyObject;
+  const {
+    FieldTemplate,
+    ArrayFieldTemplate,
+    ArrayFieldItemTemplate,
+    ObjectFieldTemplate
+  } = props.templates || JSONExt.emptyObject;
 
   const customization = {
     buttonStyle,
@@ -652,6 +673,18 @@ export function FormComponent(props: IFormComponentProps): JSX.Element {
   const fieldTemplate = React.useMemo(
     () => FieldTemplate ?? CustomTemplateFactory(customization),
     [FieldTemplate, buttonStyle, compact, showModifiedFromDefault, translator]
+  ) as React.FunctionComponent;
+
+  const arrayItemTemplate = React.useMemo(
+    () =>
+      ArrayFieldItemTemplate ?? CustomArrayItemTemplateFactory(customization),
+    [
+      ArrayFieldItemTemplate,
+      buttonStyle,
+      compact,
+      showModifiedFromDefault,
+      translator
+    ]
   ) as React.FunctionComponent;
 
   const arrayTemplate = React.useMemo(
@@ -678,6 +711,7 @@ export function FormComponent(props: IFormComponentProps): JSX.Element {
 
   const templates: Record<string, React.FunctionComponent> = {
     FieldTemplate: fieldTemplate,
+    ArrayFieldItemTemplate: arrayItemTemplate,
     ArrayFieldTemplate: arrayTemplate,
     ObjectFieldTemplate: objectTemplate
   };

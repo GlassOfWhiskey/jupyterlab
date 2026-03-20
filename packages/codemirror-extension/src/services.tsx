@@ -208,7 +208,7 @@ export const extensionPlugin: JupyterFrontEndPlugin<IEditorExtensionRegistry> =
                         nonDefault[property] = value;
                       }
                     }
-                    props.onChange(nonDefault);
+                    props.onChange(nonDefault, props.fieldPathId.path);
                   }}
                   tagName="div"
                   translator={translator ?? nullTranslator}

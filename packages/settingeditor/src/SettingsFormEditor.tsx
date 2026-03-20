@@ -9,11 +9,7 @@ import { showErrorMessage } from '@jupyterlab/apputils';
 import type { ISettingRegistry, Settings } from '@jupyterlab/settingregistry';
 import type { ITranslator } from '@jupyterlab/translation';
 import { FormComponent } from '@jupyterlab/ui-components';
-import type {
-  PartialJSONObject,
-  ReadonlyJSONObject,
-  ReadonlyPartialJSONObject
-} from '@lumino/coreutils';
+import type { PartialJSONObject, ReadonlyJSONObject } from '@lumino/coreutils';
 import { JSONExt } from '@lumino/coreutils';
 import { Debouncer } from '@lumino/polling';
 import type { IChangeEvent } from '@rjsf/core';
@@ -241,7 +237,7 @@ export class SettingsFormEditor extends React.Component<
     );
   }
 
-  private _onChange = (e: IChangeEvent<ReadonlyPartialJSONObject>): void => {
+  private _onChange = (e: IChangeEvent<ReadonlyJSONObject>): void => {
     this.props.hasError(e.errors.length !== 0);
 
     // Create a deep copy of the current form data to work with

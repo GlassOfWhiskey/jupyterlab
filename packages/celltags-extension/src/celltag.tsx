@@ -52,7 +52,7 @@ export class CellTagField {
     const data = props.formData;
     if (tag && !data.includes(tag)) {
       data.push(tag);
-      props.formContext.updateMetadata({ [props.name]: data }, true);
+      props.registry.formContext.updateMetadata({ [props.name]: data }, true);
     }
   }
 
@@ -153,7 +153,7 @@ export class CellTagField {
       data.push(tag);
     }
 
-    props.formContext.updateMetadata({ [props.name]: data }, true);
+    props.registry.formContext.updateMetadata({ [props.name]: data }, true);
   }
 
   render(props: FieldProps): JSX.Element {

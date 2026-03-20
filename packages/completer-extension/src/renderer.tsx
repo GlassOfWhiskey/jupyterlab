@@ -17,7 +17,8 @@ export function renderAvailableProviders(props: FieldProps): JSX.Element {
   const { schema } = props;
   const title = schema.title;
   const desc = schema.description;
-  const settings: ISettingRegistry.ISettings = props.formContext.settings;
+  const settings: ISettingRegistry.ISettings =
+    props.registry.formContext.settings;
   const userData = settings.get(AVAILABLE_PROVIDERS).user as
     | ReadonlyPartialJSONObject
     | undefined;
